@@ -13,14 +13,14 @@ def logs():
            ('r3', ['i3', 'i4', 'i1', 'i2'], None, 'impress'),
            ('r4', ['i4', 'i1', 'i2', 'i3'], 'i3', 'click'),
            ('r4', ['i1', 'i2', 'i3', 'i4'], None, 'impress'))
-    cols = ('request_id', 'impressions', 'event', 'event_type')
+    cols = ('request_id', 'impressions', 'event_item', 'event_type')
     df = pd.DataFrame(arr, columns=cols)
     return df
 
 
 @pytest.fixture
 def events(logs):
-    impress_logs = logs[logs['event_type'] == 'impress']
+    impress_logs = logs
     click_logs = logs[logs['event_type'] == 'click']
 
     impress_events = get_impress_item_and_pos(impress_logs)
@@ -65,10 +65,10 @@ def test_get_impress_position(logs):
 def test_aggregate_events(events):
     result = aggregate_events(events)
 
-    arr = [['i1', 0, 3],
-           ['i2', 1, 3],
-           ['i3', 1, 3],
-           ['i4', 0, 3]]
+    arr = [['i1', 0, 5],
+           ['i2', 1, 5],
+           ['i3', 1, 5],
+           ['i4', 0, 5]]
     cols = ['item', 'click', 'impress']
     expected = pd.DataFrame(arr, columns=cols)
 
@@ -94,7 +94,7 @@ def test_events_schema(events):
 
 # Integration test: Input logs to aggregated events
 def test_feature_pipeline(logs):
-    impress_logs = logs[logs['event_type'] == 'impress']
+    impress_logs = logs
     click_logs = logs[logs['event_type'] == 'click']
 
     impress_events = get_impress_item_and_pos(impress_logs)
@@ -103,10 +103,10 @@ def test_feature_pipeline(logs):
     sample_events = pd.concat([impress_events, click_events])
     result = aggregate_events(sample_events)
 
-    arr = [['i1', 0, 3],
-           ['i2', 1, 3],
-           ['i3', 1, 3],
-           ['i4', 0, 3]]
+    arr = [['i1', 0, 5],
+           ['i2', 1, 5],
+           ['i3', 1, 5],
+           ['i4', 0, 5]]
     cols = ['item', 'click', 'impress']
     expected = pd.DataFrame(arr, columns=cols)
 
@@ -119,8 +119,8 @@ def test_model_pipeline(events, model, items):
     result = model.batch_predict(items)
 
     arr = [['i1', 0.0],
-           ['i2', 0.3333333333],
-           ['i3', 0.3333333333],
+           ['i2', 0.2],
+           ['i3', 0.2],
            ['i4', 0.0],
            ['i5', -1.0]]
     cols = ['item_id', 'expected_ctr']

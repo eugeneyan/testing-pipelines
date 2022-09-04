@@ -20,6 +20,20 @@ def get_click_item_and_pos(df: pd.DataFrame) -> pd.DataFrame:
     return _df[['request_id', 'item', 'position', 'event_type']]
 
 
+def get_updated_impressions(impressions, impressions_visible):
+    if isinstance(impressions_visible, list) and len(impressions) >= len(impressions_visible):
+        return impressions_visible
+    return impressions
+
+
+def update_impression_col(df):
+    _df = df.copy()
+    _df['impressions'] = _df.apply(lambda x: get_updated_impressions(x['impressions'],
+                                                                     x['impressions_visible']), axis=1)
+    _df = _df.drop(columns=['impressions_visible'])
+    return _df
+
+
 def get_impress_positions(df: pd.DataFrame) -> pd.Series:
     positions = df.groupby('request_id').cumcount() + 1
     positions = positions.reset_index(drop=True)

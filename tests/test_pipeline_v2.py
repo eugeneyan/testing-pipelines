@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.pipeline import get_click_position, get_impress_positions, aggregate_events, get_impress_item_and_pos, \
+from src.pipeline_v2 import get_click_position, get_impress_positions, aggregate_events, get_impress_item_and_pos, \
     get_click_item_and_pos, NaiveCTR, get_updated_impressions, update_impression_col
 
 
@@ -13,7 +13,7 @@ def logs():
            ('r3', ['i3', 'i4', 'i1', 'i2'], None, None, 'impress'),
            ('r4', ['i4', 'i1', 'i2', 'i3'], ['i4', 'i1', 'i2', 'i3'], 'i3', 'click'),
            ('r5', ['i1', 'i2', 'i3', 'i4'], ['i1', 'i2'], None, 'impress'))
-    cols = ('request_id', 'impressions', 'impressions_visible', 'event', 'event_type')
+    cols = ('request_id', 'impressions', 'impressions_visible', 'event_item', 'event_type')
     df = pd.DataFrame(arr, columns=cols)
     return df
 
@@ -22,7 +22,7 @@ def logs():
 def events(logs):
     logs = update_impression_col(logs)
 
-    impress_logs = logs[logs['event_type'] == 'impress']
+    impress_logs = logs
     click_logs = logs[logs['event_type'] == 'click']
 
     impress_events = get_impress_item_and_pos(impress_logs)
@@ -76,10 +76,10 @@ def test_get_impress_position(logs):
 def test_aggregate_events(events):
     result = aggregate_events(events)
 
-    arr = [['i1', 0, 3],
-           ['i2', 1, 3],
-           ['i3', 1, 2],
-           ['i4', 0, 1]]
+    arr = [['i1', 0, 4],
+           ['i2', 1, 5],
+           ['i3', 1, 4],
+           ['i4', 0, 2]]
     cols = ['item', 'click', 'impress']
     expected = pd.DataFrame(arr, columns=cols)
 
@@ -107,7 +107,7 @@ def test_events_schema(events):
 def test_feature_pipeline(logs):
     logs = update_impression_col(logs)
 
-    impress_logs = logs[logs['event_type'] == 'impress']
+    impress_logs = logs
     click_logs = logs[logs['event_type'] == 'click']
 
     impress_events = get_impress_item_and_pos(impress_logs)
@@ -116,10 +116,10 @@ def test_feature_pipeline(logs):
     sample_events = pd.concat([impress_events, click_events])
     result = aggregate_events(sample_events)
 
-    arr = [['i1', 0, 3],
-           ['i2', 1, 3],
-           ['i3', 1, 2],
-           ['i4', 0, 1]]
+    arr = [['i1', 0, 4],
+           ['i2', 1, 5],
+           ['i3', 1, 4],
+           ['i4', 0, 2]]
     cols = ['item', 'click', 'impress']
     expected = pd.DataFrame(arr, columns=cols)
 
@@ -132,8 +132,8 @@ def test_model_pipeline(events, model, items):
     result = model.batch_predict(items)
 
     arr = [['i1', 0.0],
-           ['i2', 0.3333333333],
-           ['i3', 0.5],
+           ['i2', 0.2],
+           ['i3', 0.25],
            ['i4', 0.0],
            ['i5', -1.0]]
     cols = ['item_id', 'expected_ctr']
