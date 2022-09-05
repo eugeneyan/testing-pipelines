@@ -6,6 +6,7 @@ from src.pipeline_v2 import get_click_position, get_impress_positions, aggregate
     get_click_item_and_pos, NaiveCTR, get_updated_impressions, update_impression_col
 
 
+# Updated to include column for visible impressions
 @pytest.fixture
 def logs():
     arr = (('r1', ['i1', 'i2', 'i3', 'i4'], ['i1', 'i2', 'i3'], None, 'impress'),
@@ -62,17 +63,21 @@ def test_get_updated_impressions(impressions, impressions_visible, updated_impre
     assert get_updated_impressions(impressions, impressions_visible) == updated_impressions
 
 
-# Unit test: Column level (no change)
+# Unit test: Column level (updated)
 def test_get_impress_position(logs):
-    impress_logs = logs[logs['event_type'] == 'impress']
-    impress_events = impress_logs.explode('impressions')
+    logs = update_impression_col(logs)
+    impress_events = logs.explode('impressions')
     impress_positions = get_impress_positions(impress_events)
 
-    # Update impress positions (too brittle?)
-    pd.testing.assert_series_equal(impress_positions, pd.Series([1, 2, 3, 4] * 3))
+    # Handcraft impress positions (too brittle?)
+    pd.testing.assert_series_equal(impress_positions, pd.Series([1, 2, 3,
+                                                                 1, 2,
+                                                                 1, 2, 3, 4,
+                                                                 1, 2, 3, 4,
+                                                                 1, 2]))
 
 
-# Unit test: Dataframe level (updated)
+# Unit test: Table level (updated)
 def test_aggregate_events(events):
     result = aggregate_events(events)
 

@@ -12,7 +12,7 @@ def logs():
            ('r2', ['i2', 'i3', 'i4', 'i1'], 'i2', 'click'),
            ('r3', ['i3', 'i4', 'i1', 'i2'], None, 'impress'),
            ('r4', ['i4', 'i1', 'i2', 'i3'], 'i3', 'click'),
-           ('r4', ['i1', 'i2', 'i3', 'i4'], None, 'impress'))
+           ('r5', ['i1', 'i2', 'i3', 'i4'], None, 'impress'))
     cols = ('request_id', 'impressions', 'event_item', 'event_type')
     df = pd.DataFrame(arr, columns=cols)
     return df
@@ -53,15 +53,14 @@ def test_get_click_position(impressions, click, expected):
 
 # Unit test: Column level
 def test_get_impress_position(logs):
-    impress_logs = logs[logs['event_type'] == 'impress']
-    impress_events = impress_logs.explode('impressions')
+    impress_events = logs.explode('impressions')
     impress_positions = get_impress_positions(impress_events)
 
-    # Since each impress log has 4 items, expect impression positions to be three sets of 1-4
-    pd.testing.assert_series_equal(impress_positions, pd.Series([1, 2, 3, 4] * 3))
+    # Since each impress log has 4 items, expect impression positions to be five sets of 1-4
+    pd.testing.assert_series_equal(impress_positions, pd.Series([1, 2, 3, 4] * 5))
 
 
-# Unit test: Dataframe level
+# Unit test: Table level
 def test_aggregate_events(events):
     result = aggregate_events(events)
 
